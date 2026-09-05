@@ -1,0 +1,42 @@
+# Dependencies and generated output
+node_modules/
+dist/
+target/
+coverage/
+*.tsbuildinfo
+pnpm-debug.log*
+__pycache__/
+*.pyc
+
+# Local configuration, state, credentials, and model data
+.env
+.env.*
+!.env.example
+.agentme/
+data/
+models/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Editor and operating-system state
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/runtime/
+
+# Upstream research checkouts are intentionally not product source
+references/
+
+# Private exports and signing material
+recordings/
+*.pem
+*.key
+*.p12
+*.pfx
+*.log

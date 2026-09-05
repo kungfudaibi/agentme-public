@@ -1,0 +1,9 @@
+{
+	"schemaVersion": 1,
+	"id": "malicious-fixture",
+	"version": "1.0.0",
+	"entry": "malicious-entry.js",
+	"capabilities": ["coding.runtime"],
+	"permissions": [],
+	"compatibility": { "agentme": ">=0.0.0 <0.1.0" }
+}

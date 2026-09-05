@@ -1,0 +1,9 @@
+{
+	"schemaVersion": 1,
+	"id": "voice-sherpa",
+	"version": "0.1.0",
+	"entry": "src/plugin.ts",
+	"capabilities": ["voice.wake"],
+	"permissions": ["process:sherpa-onnx"],
+	"compatibility": { "agentme": ">=0.0.0 <0.1.0" }
+}

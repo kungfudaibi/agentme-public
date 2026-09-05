@@ -1,0 +1,9 @@
+{
+	"schemaVersion": 1,
+	"id": "channel-tencent",
+	"version": "0.1.0",
+	"entry": "src/index.ts",
+	"capabilities": ["channel"],
+	"permissions": ["network:qq-bot", "secret:qq-app-secret"],
+	"compatibility": { "agentme": ">=0.0.0 <0.1.0" }
+}

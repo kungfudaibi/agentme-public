@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="description" content="AgentMe 本地优先的个人多 Agent 工作台" />
+		<title>AgentMe</title>
+		<script type="module" src="./office.ts"></script>
+		<link rel="icon" href="./favicon.svg" />
+		<link rel="stylesheet" href="./styles.css" />
+		<link rel="stylesheet" href="./office.css" />
+	</head>
+	<body>
+		<div class="app-shell">
+			<header class="topbar">
+				<a class="brand" href="#conversation" aria-label="AgentMe 个人 Agent 工作台首页">
+					<span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+					<span><strong>AgentMe</strong><small>个人 Agent 工作台</small></span>
+				</a>
+				<div class="topbar-actions">
+					<p class="connection" id="connection" role="status">
+						<span class="status-dot" aria-hidden="true"></span>
+						正在启动本地助手
+					</p>
+					<button class="wake-toggle mobile-dashboard" id="personal-dashboard-top" type="button" aria-controls="personal-dashboard">个人看板</button>
+					<button class="wake-toggle mobile-dashboard" id="memory-top" type="button" aria-controls="memory-workspace">长期记忆</button>
+					<button class="wake-toggle mobile-dashboard" id="automation-top" type="button" aria-controls="automation-workspace">自动</button>
+					<button class="wake-toggle mobile-dashboard" id="skill-workshop-top" type="button" aria-controls="skill-workshop">工坊</button>
+					<button class="wake-toggle provider-toggle" id="providers" type="button" aria-haspopup="dialog" aria-controls="provider-dialog">
+						<span class="status-dot" aria-hidden="true"></span>
+						API <span id="provider-summary">加载中</span>
+					</button>
+					<button class="wake-toggle provider-toggle" id="tencent-channel" type="button" aria-haspopup="dialog" aria-controls="tencent-channel-dialog">
+						<span class="status-dot" aria-hidden="true"></span>
+						QQ <span id="tencent-channel-summary">加载中</span>
+					</button>
+					<button class="wake-toggle" id="wake" type="button" aria-pressed="false" aria-label="小麦助手：启用本地唤醒监听">
+						<span class="status-dot" aria-hidden="true"></span>
+						小麦助手
+					</button>
+					<button class="wake-toggle" id="autostart" type="button" aria-pressed="false" aria-label="启用开机启动">
+						<span class="status-dot" aria-hidden="true"></span>
+						开机启动
+					</button>
+					<button class="icon-button" id="mute" type="button" aria-pressed="false" aria-label="静音">
+						<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Zm-6 9a6 6 0 0 0 12 0M12 18v3m-4 0h8" /></svg>
+					</button>
+				</div>
+			</header>
+
+			<aside class="rail" aria-label="会话导航">
+				<button class="new-chat" id="new-chat" type="button"><span>＋</span> 新对话</button>
+				<button class="delete-chat" id="delete-chat" type="button">删除当前对话</button>
+				<button class="dashboard-nav" id="personal-dashboard-nav" type="button" aria-controls="personal-dashboard" aria-expanded="false">
+					<span aria-hidden="true">▦</span>
+					<span><strong>个人看板</strong><small>财务、经历与技能</small></span>
+				</button>
+				<button class="dashboard-nav" id="memory-nav" type="button" aria-controls="memory-workspace" aria-expanded="false">
+					<span aria-hidden="true">◇</span>
+					<span><strong>长期记忆</strong><small>项目、决策与经验</small></span>
+				</button>
+				<button class="dashboard-nav" id="automation-nav" type="button" aria-controls="automation-workspace" aria-expanded="false">
+					<span aria-hidden="true">◷</span>
+					<span><strong>自动任务</strong><small>定时调度与执行状态</small></span>
+				</button>
+				<button class="dashboard-nav" id="skill-workshop-nav" type="button" aria-controls="skill-workshop" aria-expanded="false">
+					<span aria-hidden="true">⌘</span>
+					<span><strong>技能工坊</strong><small>评估、批准与回滚</small></span>
+				</button>
+				<nav aria-label="最近会话">
+					<p class="section-label">今天</p>
+					<button class="chat-item active" type="button">
+						<span class="chat-icon" aria-hidden="true">⌁</span>
+						<span><strong>当前工作台</strong><small id="chat-summary">等待你的第一个任务</small></span>
+					</button>
+				</nav>
+				<div class="rail-footer">
+					<span class="avatar" aria-hidden="true">你</span>
+					<span><strong>本地主人</strong><small>仅本机访问</small></span>
+				</div>
+			</aside>
+
+			<main class="conversation" id="conversation">
+				<div class="conversation-scroll" id="conversation-scroll">
+					<section class="welcome" id="welcome" aria-labelledby="welcome-title">
+						<div class="orchestrator-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+						<p class="eyebrow">ORCHESTRATOR ONLINE</p>
+						<h1 id="welcome-title">今天想完成什么？</h1>
+						<p>告诉我目标，主 Agent 会拆解任务、调度编码 Agent，并把工作树、测试和结果集中呈现给你。</p>
+						<fieldset class="suggestions">
+							<legend class="sr-only">快捷任务</legend>
+							<button type="button" data-prompt="检查当前仓库的测试失败并修复">检查并修复测试</button>
+							<button type="button" data-prompt="审查最近的代码变化并给出风险报告">审查最近变更</button>
+							<button type="button" data-prompt="梳理项目待办并开始最高优先级任务">继续项目待办</button>
+						</fieldset>
+					</section>
+					<div class="messages" id="messages" role="log" aria-live="polite" aria-label="对话消息"></div>
+				</div>
+
+				<section class="task-workbench" id="task-workbench" aria-labelledby="task-workbench-title" hidden>
+					<header class="workbench-header">
+						<button id="task-back" type="button">← 返回主 Agent</button>
+						<div><p class="eyebrow">WORKER SESSION</p><h1 id="task-workbench-title">任务执行过程</h1></div>
+						<span class="state-pill" id="task-workbench-state">加载中</span>
+					</header>
+					<div class="workbench-context" id="task-workbench-context"></div>
+					<div class="workbench-timeline" id="task-workbench-events" role="log" aria-live="polite"></div>
+					<form class="workbench-composer" id="task-turn-form">
+						<label for="task-turn-message">继续和这个执行 Agent 对话</label>
+						<textarea id="task-turn-message" rows="2" maxlength="4000" placeholder="例如：继续修复剩余测试，并说明修改原因" required></textarea>
+						<div><p id="task-turn-hint">正在检查会话是否可以继续…</p><button id="task-turn-send" type="submit">发送给当前 Agent</button></div>
+					</form>
+				</section>
+
+				<section class="personal-dashboard" id="personal-dashboard" aria-labelledby="personal-dashboard-title" hidden>
+					<header class="dashboard-header">
+						<button id="dashboard-back" type="button">← 返回主 Agent</button>
+						<div>
+							<p class="eyebrow">OWNER DATA · ENCRYPTED</p>
+							<h1 id="personal-dashboard-title" tabindex="-1">个人看板</h1>
+							<p>数据由本机 Host 加密保存，不写入浏览器存储，也不会自动发送给模型。</p>
+						</div>
+						<div class="dashboard-actions">
+							<button id="dashboard-refresh" type="button">刷新</button>
+							<button class="primary-action" id="dashboard-add" type="button">＋ 添加记录</button>
+						</div>
+					</header>
+					<p class="dashboard-status" id="dashboard-status" role="status" aria-live="polite">尚未加载个人看板。</p>
+					<section aria-labelledby="dashboard-summary-title">
+						<div class="dashboard-section-heading">
+							<div><p class="eyebrow">FINANCIAL SNAPSHOT</p><h2 id="dashboard-summary-title">财务概览</h2></div>
+							<p>按币种分别汇总，不进行隐式汇率换算。</p>
+						</div>
+						<div class="dashboard-summary" id="dashboard-summary" aria-live="polite"></div>
+					</section>
+					<section class="dashboard-records" aria-labelledby="dashboard-records-title">
+						<div class="dashboard-section-heading">
+							<div><p class="eyebrow">OWNER TIMELINE</p><h2 id="dashboard-records-title">记录时间线</h2></div>
+							<label for="dashboard-filter">筛选
+								<select id="dashboard-filter">
+									<option value="all">全部</option>
+									<option value="balance">存款</option>
+									<option value="income">收入</option>
+									<option value="expense">支出</option>
+									<option value="investment">投资</option>
+									<option value="competition">比赛</option>
+									<option value="skill">技能</option>
+								</select>
+							</label>
+						</div>
+						<ul class="dashboard-entry-list" id="dashboard-entry-list" aria-busy="false"></ul>
+					</section>
+				</section>
+
+				<section class="personal-dashboard memory-workspace" id="memory-workspace" aria-labelledby="memory-title" hidden>
+					<header class="dashboard-header">
+						<button id="memory-back" type="button">← 返回主 Agent</button>
+						<div>
+							<p class="eyebrow">INSPECTABLE MEMORY · LOCAL</p>
+							<h1 id="memory-title" tabindex="-1">长期记忆</h1>
+							<p>Markdown 是事实来源，SQLite 只负责搜索索引。内容不会自动进入模型上下文。</p>
+						</div>
+						<div class="dashboard-actions">
+							<button id="memory-export" type="button">导出</button>
+							<button id="memory-refresh" type="button">刷新</button>
+							<button class="primary-action" id="memory-add" type="button">＋ 添加记忆</button>
+						</div>
+					</header>
+					<p class="dashboard-status" id="memory-status" role="status" aria-live="polite">尚未加载长期记忆。</p>
+					<section class="dashboard-records" aria-labelledby="memory-records-title">
+						<div class="dashboard-section-heading memory-toolbar">
+							<div><p class="eyebrow">PROVENANCE TIMELINE</p><h2 id="memory-records-title">可追溯记录</h2></div>
+							<search>
+							<form id="memory-search-form">
+								<label for="memory-search">搜索
+									<input id="memory-search" type="search" maxlength="500" autocomplete="off" placeholder="搜索项目、决定或经验" />
+								</label>
+								<label for="memory-kind-filter">分类
+									<select id="memory-kind-filter">
+										<option value="all">全部</option>
+										<option value="profile">个人偏好</option>
+										<option value="project">项目知识</option>
+										<option value="decision">决策</option>
+										<option value="experience">任务经验</option>
+										<option value="daily">每日记录</option>
+									</select>
+								</label>
+								<button type="submit">搜索</button>
+							</form>
+							</search>
+						</div>
+						<ul class="dashboard-entry-list memory-entry-list" id="memory-entry-list" aria-busy="false"></ul>
+					</section>
+				</section>
+
+				<section class="personal-dashboard memory-workspace" id="skill-workshop" aria-labelledby="skill-workshop-title" hidden>
+					<header class="dashboard-header">
+						<button id="skill-workshop-back" type="button">← 返回主 Agent</button>
+						<div>
+							<p class="eyebrow">GOVERNED LEARNING · PROPOSE ONLY</p>
+							<h1 id="skill-workshop-title" tabindex="-1">技能工坊</h1>
+							<p>提案先静态扫描和隔离评估，再由你按内容哈希批准。它只能写入工坊目录，不能修改核心、策略或用户技能。</p>
+						</div>
+						<div class="dashboard-actions">
+							<button id="skill-workshop-refresh" type="button">刷新</button>
+							<button class="primary-action" id="skill-proposal-add" type="button">＋ 新建提案</button>
+						</div>
+					</header>
+					<p class="dashboard-status" id="skill-workshop-status" role="status" aria-live="polite">尚未加载技能提案。</p>
+					<ul class="dashboard-entry-list memory-entry-list" id="skill-proposal-list" aria-busy="false"></ul>
+				</section>
+
+				<section class="personal-dashboard memory-workspace" id="automation-workspace" aria-labelledby="automation-title" hidden>
+					<header class="dashboard-header">
+						<button id="automation-back" type="button">← 返回主 Agent</button>
+						<div>
+							<p class="eyebrow">DURABLE AUTOMATION · OWNER SCOPED</p>
+							<h1 id="automation-title" tabindex="-1">自动任务</h1>
+							<p>定时任务到点后交给主 Agent 调度；也可由已认证任务结果触发。每个条件都受过期、冷却和次数限制。</p>
+						</div>
+						<div class="dashboard-actions">
+							<button id="automation-refresh" type="button">刷新</button>
+							<button id="standing-intent-add" type="button">＋ 添加条件</button>
+							<button class="primary-action" id="automation-add" type="button">＋ 安排任务</button>
+						</div>
+					</header>
+					<p class="dashboard-status" id="automation-status" role="status" aria-live="polite">尚未加载自动任务。</p>
+					<section class="automation-group" aria-labelledby="scheduled-task-title">
+						<div class="dashboard-section-heading"><div><p class="eyebrow">TIME TRIGGER</p><h2 id="scheduled-task-title">定时任务</h2></div></div>
+						<ul class="dashboard-entry-list memory-entry-list" id="automation-list" aria-busy="false"></ul>
+					</section>
+					<section class="automation-group" aria-labelledby="standing-intent-title">
+						<div class="dashboard-section-heading"><div><p class="eyebrow">EVENT TRIGGER · BOUNDED</p><h2 id="standing-intent-title">条件任务</h2></div></div>
+						<ul class="dashboard-entry-list memory-entry-list" id="standing-intent-list" aria-busy="false"></ul>
+					</section>
+				</section>
+
+				<form class="composer" id="composer">
+					<label class="sr-only" for="message">给 AgentMe 发送任务</label>
+					<textarea id="message" name="message" rows="2" maxlength="4000" placeholder="描述目标，AgentMe 会安排合适的 Agent…" required></textarea>
+					<div class="composer-footer">
+						<div class="context-controls">
+							<label>仓库 <select id="repository" aria-label="任务仓库"><option value="fake">演示仓库</option></select></label>
+							<label>编码后端 <select id="coding-backend" aria-label="编码后端"><option value="runtime-fake">演示后端</option></select></label>
+							<label>语音 <select id="voice-route" aria-label="语音处理方式"><option value="auto">自动回退</option><option value="local">仅本地</option><option value="aliyun">阿里云</option></select></label>
+							<span class="runtime-chip" id="runtime">Fake Agent</span>
+						</div>
+						<div class="send-controls">
+							<button class="voice-button" id="voice" type="button" aria-pressed="false" aria-label="开始或结束语音录制">
+								<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Zm-6 9a6 6 0 0 0 12 0M12 18v3m-4 0h8" /></svg>
+								<span>语音</span>
+							</button>
+							<button class="send-button" id="send" type="submit" aria-label="发送任务">
+								<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 14-7-4 14-3-6-7-1Zm7 1 7-8" /></svg>
+							</button>
+						</div>
+					</div>
+				</form>
+			</main>
+
+			<aside class="activity" aria-labelledby="activity-title">
+				<div class="activity-header">
+					<div><p class="eyebrow">LIVE ACTIVITY</p><h2 id="activity-title">Agent 运行中心</h2></div>
+					<span class="worker-count" id="worker-count">0 运行中</span>
+				</div>
+				<fieldset class="metrics">
+					<legend class="sr-only">任务统计</legend>
+					<div><strong id="metric-active">0</strong><span>运行中</span></div>
+					<div><strong id="metric-completed">0</strong><span>已完成</span></div>
+					<div><strong id="metric-attention">0</strong><span>需关注</span></div>
+				</fieldset>
+				<div class="activity-list" id="activity-list">
+					<div class="empty-activity">
+						<span aria-hidden="true">⌁</span>
+						<strong>暂无运行任务</strong>
+						<p>提交目标后，这里会显示主任务、子 Agent、工作树和验证状态。</p>
+					</div>
+				</div>
+				<div class="voice-state" id="voice-state">
+					<div class="voice-orb" aria-hidden="true"><i></i><i></i><i></i></div>
+					<div><strong id="voice-title">按键说话</strong><p id="voice-detail">录音后由本地或阿里云识别</p></div>
+					<span id="voice-badge">AUTO</span>
+				</div>
+			</aside>
+		</div>
+		<dialog class="provider-dialog" id="provider-dialog" aria-labelledby="provider-title">
+			<header>
+				<div>
+					<p class="eyebrow">MODEL ROUTING</p>
+					<h2 id="provider-title">API、模型与编码权限</h2>
+					<p>API Key 由系统受保护存储保管；编码权限按任务工作树隔离并可随时切回。</p>
+				</div>
+				<button class="dialog-close" id="provider-close" type="button" aria-label="关闭 API 设置">×</button>
+			</header>
+			<div class="provider-list" id="provider-list" aria-live="polite"></div>
+			<section class="coding-permission-section" aria-labelledby="coding-permission-title">
+				<header><div><p class="eyebrow">CODEX EXECUTION</p><h3 id="coding-permission-title">编码 Agent 权限</h3></div><strong id="coding-permission-summary">加载中</strong></header>
+				<div class="provider-list permission-list" id="coding-permission-list" aria-live="polite"></div>
+			</section>
+			<p class="provider-note">模型切换对下一次主 Agent 对话生效。权限切换不会中断正在运行的编码任务；任务运行时需等待其结束后再切换。</p>
+		</dialog>
+		<dialog class="provider-dialog channel-dialog" id="tencent-channel-dialog" aria-labelledby="tencent-channel-title">
+			<header>
+				<div>
+					<p class="eyebrow">REMOTE OWNER CHANNEL</p>
+					<h2 id="tencent-channel-title">QQ 私聊任务通道</h2>
+					<p>只允许本机配置的主人 OpenID；群聊和未配对身份不会获得任务、文件、看板或密钥能力。</p>
+				</div>
+				<button class="dialog-close" id="tencent-channel-close" type="button" aria-label="关闭 QQ 通道设置">×</button>
+			</header>
+			<form class="provider-card channel-form" id="tencent-channel-form">
+				<div class="provider-card-heading">
+					<div><strong>腾讯 QQ Bot</strong><small id="tencent-channel-health" role="status">正在读取本机配置</small></div>
+					<label class="channel-switch"><input id="tencent-channel-enabled" type="checkbox" /> 启用</label>
+				</div>
+				<label>主人 OpenID<input id="tencent-owner-id" maxlength="128" autocomplete="off" placeholder="QQ 开放平台发送者 OpenID" /></label>
+				<label>本机账户标识<input id="tencent-account-id" maxlength="256" autocomplete="off" value="agentme" required /></label>
+				<label>App ID<input id="tencent-app-id" maxlength="4096" autocomplete="new-password" /></label>
+				<label>App Secret<input id="tencent-app-secret" maxlength="4096" autocomplete="new-password" /></label>
+				<div class="provider-actions"><button class="provider-activate" id="tencent-channel-save" type="submit">保存并应用</button></div>
+			</form>
+			<p class="provider-note">凭据只进入操作系统受保护存储。可用命令：/task &lt;仓库ID&gt; &lt;任务&gt;、/status &lt;任务ID&gt;、/cancel &lt;任务ID&gt;。</p>
+		</dialog>
+		<dialog class="dashboard-dialog" id="dashboard-dialog" aria-labelledby="dashboard-dialog-title">
+			<form id="dashboard-entry-form">
+				<header>
+					<div><p class="eyebrow">OWNER RECORD</p><h2 id="dashboard-dialog-title">添加看板记录</h2></div>
+					<button class="dialog-close" id="dashboard-dialog-close" type="button" aria-label="关闭看板记录编辑器">×</button>
+				</header>
+				<input id="dashboard-entry-id" type="hidden" />
+				<div class="dashboard-form-grid">
+					<label>类型
+						<select id="dashboard-type" required>
+							<option value="balance">存款</option>
+							<option value="income">收入</option>
+							<option value="expense">支出</option>
+							<option value="investment">投资</option>
+							<option value="competition">比赛</option>
+							<option value="skill">技能</option>
+						</select>
+					</label>
+					<label><span id="dashboard-name-label">账户</span><input id="dashboard-name" maxlength="120" required /></label>
+					<label>日期<input id="dashboard-date" type="date" required /></label>
+					<label data-dashboard-fields="financial">金额<input id="dashboard-amount" inputmode="decimal" maxlength="24" required /></label>
+					<label data-dashboard-fields="financial">币种<input id="dashboard-currency" maxlength="3" value="CNY" required /></label>
+					<label data-dashboard-fields="investment" hidden>投资状态
+						<select id="dashboard-investment-status"><option value="active">持有中</option><option value="exited">已退出</option><option value="written-off">已核销</option></select>
+					</label>
+					<label data-dashboard-fields="skill" hidden>技能分类<input id="dashboard-category" maxlength="120" /></label>
+					<label data-dashboard-fields="skill" hidden>熟练度
+						<select id="dashboard-level"><option value="1">1 · 入门</option><option value="2">2 · 基础</option><option value="3">3 · 熟练</option><option value="4">4 · 高级</option><option value="5">5 · 专家</option></select>
+					</label>
+					<label data-dashboard-fields="competition" hidden>角色<input id="dashboard-role" maxlength="120" /></label>
+					<label data-dashboard-fields="competition" hidden>结果<input id="dashboard-result" maxlength="200" /></label>
+					<label class="dashboard-wide" data-dashboard-fields="note">备注<input id="dashboard-note" maxlength="1000" /></label>
+					<label class="dashboard-wide" data-dashboard-fields="skill" hidden>技能证据<input id="dashboard-evidence" maxlength="1000" /></label>
+				</div>
+				<footer>
+					<p id="dashboard-form-hint">保存后只发送给本机 Host。</p>
+					<button class="primary-action" id="dashboard-save" type="submit">保存记录</button>
+				</footer>
+			</form>
+		</dialog>
+		<dialog class="dashboard-dialog" id="memory-dialog" aria-labelledby="memory-dialog-title">
+			<form id="memory-entry-form">
+				<header>
+					<div><p class="eyebrow">OWNER MEMORY</p><h2 id="memory-dialog-title">添加长期记忆</h2></div>
+					<button class="dialog-close" id="memory-dialog-close" type="button" aria-label="关闭长期记忆编辑器">×</button>
+				</header>
+				<div class="dashboard-form-grid">
+					<label for="memory-id">记忆标识
+						<input id="memory-id" maxlength="101" pattern="[a-z0-9][a-z0-9._\-]{0,100}" autocomplete="off" placeholder="例如 project-agentme" required />
+					</label>
+					<label for="memory-kind">分类
+						<select id="memory-kind" required>
+							<option value="profile">个人偏好</option>
+							<option value="project">项目知识</option>
+							<option value="decision">决策</option>
+							<option value="experience">任务经验</option>
+							<option value="daily" selected>每日记录</option>
+						</select>
+					</label>
+					<label class="dashboard-wide" for="memory-content">内容
+						<textarea id="memory-content" rows="8" maxlength="20000" required></textarea>
+					</label>
+					<label for="memory-verified-at">最近核验时间
+						<input id="memory-verified-at" type="datetime-local" />
+					</label>
+					<label for="memory-confidence">置信度（0–1）
+						<input id="memory-confidence" type="number" min="0" max="1" step="0.05" value="0.8" required />
+					</label>
+					<label for="memory-sensitivity">敏感级别
+						<select id="memory-sensitivity" required>
+							<option value="private">私有</option>
+							<option value="sensitive">敏感</option>
+						</select>
+					</label>
+				</div>
+				<footer>
+					<p>来源由 Host 记录；编辑不会改变最初来源和创建时间。</p>
+					<button class="primary-action" id="memory-save" type="submit">保存记忆</button>
+				</footer>
+			</form>
+		</dialog>
+		<dialog class="dashboard-dialog" id="skill-proposal-dialog" aria-labelledby="skill-proposal-dialog-title">
+			<form id="skill-proposal-form">
+				<header>
+					<div><p class="eyebrow">PROPOSE ONLY</p><h2 id="skill-proposal-dialog-title">新建技能提案</h2></div>
+					<button class="dialog-close" id="skill-proposal-close" type="button" aria-label="关闭技能提案编辑器">×</button>
+				</header>
+				<div class="dashboard-form-grid">
+					<label for="skill-proposal-id">技能标识
+						<input id="skill-proposal-id" maxlength="64" pattern="[a-z0-9][a-z0-9\-]{0,63}" autocomplete="off" placeholder="例如 verified-reviewer" required />
+					</label>
+					<label class="dashboard-wide" for="skill-proposal-content">技能内容
+						<textarea id="skill-proposal-content" rows="12" maxlength="64000" required></textarea>
+					</label>
+				</div>
+				<footer>
+					<p>创建不会修改任何已生效技能。</p>
+					<button class="primary-action" type="submit">创建待评估提案</button>
+				</footer>
+			</form>
+		</dialog>
+		<dialog class="dashboard-dialog" id="automation-dialog" aria-labelledby="automation-dialog-title">
+			<form id="automation-form">
+				<header>
+					<div><p class="eyebrow">OWNER-SCOPED SCHEDULE</p><h2 id="automation-dialog-title">安排自动任务</h2></div>
+					<button class="dialog-close" id="automation-dialog-close" type="button" aria-label="关闭自动任务编辑器">×</button>
+				</header>
+				<div class="dashboard-form-grid">
+					<label for="automation-run-at">执行时间
+						<input id="automation-run-at" type="datetime-local" required />
+					</label>
+					<label class="dashboard-wide" for="automation-instruction">任务目标
+						<textarea id="automation-instruction" rows="8" maxlength="8000" placeholder="描述可验证的工作目标" required></textarea>
+					</label>
+				</div>
+				<footer>
+					<p>使用当前选择的仓库与 Agent；可在执行前取消。</p>
+					<button class="primary-action" type="submit">确认安排</button>
+				</footer>
+			</form>
+		</dialog>
+		<dialog class="dashboard-dialog" id="standing-intent-dialog" aria-labelledby="standing-intent-dialog-title">
+			<form id="standing-intent-form">
+				<header>
+					<div><p class="eyebrow">OWNER-SCOPED CONDITION</p><h2 id="standing-intent-dialog-title">添加条件任务</h2></div>
+					<button class="dialog-close" id="standing-intent-dialog-close" type="button" aria-label="关闭条件任务编辑器">×</button>
+				</header>
+				<div class="dashboard-form-grid">
+					<label for="standing-intent-event">触发条件
+						<select id="standing-intent-event" required><option value="task.failed">任一任务失败</option><option value="task.completed">任一任务完成</option></select>
+					</label>
+					<label for="standing-intent-expires-at">过期时间
+						<input id="standing-intent-expires-at" type="datetime-local" required />
+					</label>
+					<label for="standing-intent-cooldown">冷却分钟
+						<input id="standing-intent-cooldown" type="number" min="0" max="525600" step="1" value="60" required />
+					</label>
+					<label for="standing-intent-max-fires">最多触发次数
+						<input id="standing-intent-max-fires" type="number" min="1" max="100" step="1" value="3" required />
+					</label>
+					<label class="dashboard-wide" for="standing-intent-instruction">触发后的任务目标
+						<textarea id="standing-intent-instruction" rows="8" maxlength="8000" placeholder="例如：分析失败证据并提出一个受限修复" required></textarea>
+					</label>
+				</div>
+				<footer>
+					<p>只响应本机主人范围内的任务完成/失败事件；只能创建当前仓库中的 Agent 任务。</p>
+					<button class="primary-action" type="submit">创建条件任务</button>
+				</footer>
+			</form>
+		</dialog>
+		<div class="toast" id="toast" role="alert" hidden></div>
+		<script type="module" src="./app.ts"></script>
+	</body>
+</html>

@@ -1,0 +1,9 @@
+{
+	"schemaVersion": 1,
+	"id": "runtime-pi",
+	"version": "0.1.0",
+	"entry": "src/index.ts",
+	"capabilities": ["coding.runtime"],
+	"permissions": ["process:pi", "filesystem:task-worktree"],
+	"compatibility": { "agentme": ">=0.0.0 <0.1.0" }
+}

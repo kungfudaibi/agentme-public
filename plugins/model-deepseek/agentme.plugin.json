@@ -1,0 +1,9 @@
+{
+	"schemaVersion": 1,
+	"id": "model-deepseek",
+	"version": "0.1.0",
+	"entry": "src/index.ts",
+	"capabilities": ["assistant.model"],
+	"permissions": ["network:deepseek", "secret:deepseek-api-key"],
+	"compatibility": { "agentme": ">=0.0.0 <0.1.0" }
+}

@@ -1,0 +1,9 @@
+{
+	"schemaVersion": 1,
+	"id": "runtime-fake",
+	"version": "0.1.0",
+	"entry": "index.js",
+	"capabilities": ["coding.runtime"],
+	"permissions": [],
+	"compatibility": { "agentme": ">=0.0.0 <0.1.0" }
+}

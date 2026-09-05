@@ -1,0 +1,9 @@
+{
+	"schemaVersion": 1,
+	"id": "voice-aliyun",
+	"version": "0.1.0",
+	"entry": "src/index.ts",
+	"capabilities": ["voice.realtime", "voice.stt", "voice.tts"],
+	"permissions": ["network:dashscope", "secret:aliyun-api-key"],
+	"compatibility": { "agentme": ">=0.0.0 <0.1.0" }
+}

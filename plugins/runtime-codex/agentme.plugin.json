@@ -1,0 +1,9 @@
+{
+	"schemaVersion": 1,
+	"id": "runtime-codex",
+	"version": "0.1.0",
+	"entry": "src/plugin.ts",
+	"capabilities": ["coding.runtime"],
+	"permissions": ["process:codex", "filesystem:task-worktree"],
+	"compatibility": { "agentme": ">=0.0.0 <0.1.0" }
+}

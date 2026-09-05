@@ -1,0 +1,45 @@
+{
+	"name": "agentme",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Windows-first, voice-addressable personal programming agent",
+	"license": "MIT",
+	"type": "module",
+	"packageManager": "pnpm@11.22.0",
+	"engines": {
+		"node": ">=24.10.0 <25"
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.json && node scripts/copy-static-assets.mjs",
+		"desktop:build": "node scripts/desktop/run-native.mjs build",
+		"desktop:check": "corepack pnpm build && node scripts/desktop/prepare-sidecar.mjs && node scripts/desktop/run-native.mjs check && node scripts/desktop/run-native.mjs test && vitest run apps/desktop/test --exclude \"dist/**\" --exclude \"apps/desktop/src-tauri/target/**\"",
+		"desktop:dev": "node scripts/desktop/run-native.mjs dev",
+		"dev": "tsc -p tsconfig.json --watch",
+		"lint": "biome check --line-ending=auto --vcs-enabled=true --vcs-client-kind=git --vcs-use-ignore-file=true --no-errors-on-unmatched apps packages plugins tests package.json tsconfig.json",
+		"lint:fix": "biome check --write --line-ending=auto --vcs-enabled=true --vcs-client-kind=git --vcs-use-ignore-file=true --no-errors-on-unmatched apps packages plugins tests package.json tsconfig.json",
+		"start:host": "node dist/apps/host/src/main.js",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"test": "vitest run --exclude \"references/**\" --exclude \"dist/**\" --exclude \"apps/desktop/src-tauri/target/**\" --passWithNoTests",
+		"test:integration": "vitest run --dir tests/integration --passWithNoTests",
+		"test:e2e": "vitest run --dir tests/e2e --passWithNoTests",
+		"voice:doctor": "node dist/apps/host/src/commands/voice-doctor.js",
+		"voice:benchmark": "node dist/apps/host/src/commands/voice-acceptance.js",
+		"voice:install-local": "node scripts/voice/install-local.mjs",
+		"office:build": "corepack pnpm build && corepack pnpm --dir apps/desktop build:web",
+		"office:preview": "node scripts/office-preview.mjs",
+		"test:office": "vitest run packages/agent-office/test tests/integration/agent-office.test.ts apps/desktop/test/office-view.test.ts --exclude \"dist/**\" --exclude \"apps/desktop/src-tauri/target/**\"",
+		"test:unit": "vitest run --exclude \"references/**\" --exclude \"dist/**\" --exclude \"apps/desktop/src-tauri/target/**\" --exclude \"tests/integration/**\" --exclude \"tests/e2e/**\" --exclude \"apps/desktop/test/**\"",
+		"check": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm build"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.9",
+		"@types/node": "24.13.3",
+		"@types/semver": "catalog:",
+		"typescript": "7.0.2",
+		"vitest": "4.1.11"
+	},
+	"dependencies": {
+		"@tencent-connect/qqbot-nodejs": "catalog:",
+		"semver": "catalog:"
+	}
+}

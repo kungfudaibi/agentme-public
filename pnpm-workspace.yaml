@@ -1,0 +1,22 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "plugins/*"
+
+catalog:
+  '@tauri-apps/api': 2.11.1
+  '@tauri-apps/cli': 2.11.4
+  '@tencent-connect/qqbot-nodejs': 1.0.4
+  '@types/semver': 7.8.0
+  semver: 7.8.5
+  vite: 8.2.1
+
+catalogMode: strict
+
+minimumReleaseAge: 1440
+
+minimumReleaseAgeExclude:
+  - "@biomejs/biome@2.5.9"
+  - "@types/node@24.13.3"
+  - "typescript@7.0.2"
+  - "vitest@4.1.11"

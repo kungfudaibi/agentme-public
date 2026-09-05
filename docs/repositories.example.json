@@ -1,0 +1,13 @@
+[
+  {
+    "id": "agentme",
+    "path": "D:\\code\\agentme",
+    "executionTarget": "windows",
+    "verificationCommands": [
+      { "executable": "corepack", "args": ["pnpm", "lint"] },
+      { "executable": "corepack", "args": ["pnpm", "typecheck"] },
+      { "executable": "corepack", "args": ["pnpm", "test"] }
+    ],
+    "permissionProfile": { "canWrite": true, "canUseNetwork": false }
+  }
+]

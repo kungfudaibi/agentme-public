@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>AgentMe 操作台</title>
+		<link rel="stylesheet" href="/ui/styles.css" />
+	</head>
+	<body>
+		<main>
+			<header><p class="eyebrow">LOCAL OPERATOR</p><h1>AgentMe</h1><p>让任务有迹可循，也随时可停。</p></header>
+			<form id="task-form">
+				<label for="token">本机访问令牌</label><input id="token" type="password" autocomplete="current-password" required />
+				<label for="repository">仓库</label><select id="repository" required disabled><option value="">输入令牌后自动连接</option></select>
+				<label for="instruction">任务说明</label><textarea id="instruction" rows="5" maxlength="4000" required></textarea>
+				<div class="actions"><button type="submit">开始任务</button><button id="cancel" type="button" class="secondary" disabled>停止</button></div>
+			</form>
+			<section aria-labelledby="timeline-title"><h2 id="timeline-title">任务时间线</h2><p id="status" role="status">尚未开始</p><ol id="timeline" aria-live="polite"></ol></section>
+		</main>
+		<script type="module" src="/ui/app.js"></script>
+	</body>
+</html>
