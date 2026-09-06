@@ -231,8 +231,16 @@ export class MemoryStore {
 	}
 
 	reindex(): void {
-		this.#db.exec("DELETE FROM memory_search");
-		for (const record of this.#records()) this.#index(record);
+		const records = this.#records();
+		this.#db.exec("BEGIN IMMEDIATE");
+		try {
+			this.#db.exec("DELETE FROM memory_search");
+			for (const record of records) this.#index(record);
+			this.#db.exec("COMMIT");
+		} catch (error) {
+			this.#db.exec("ROLLBACK");
+			throw error;
+		}
 	}
 
 	close(): void {

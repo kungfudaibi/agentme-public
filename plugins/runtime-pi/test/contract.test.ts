@@ -253,7 +253,7 @@ describe("Pi process controller", () => {
 	it("reports files changed before the settled completion", async () => {
 		const cwd = await createGitFixture("agentme-pi-process-");
 		try {
-			const script = join(cwd, "pi-stub.js");
+			const script = join(cwd, "pi-stub.cjs");
 			await writeFile(
 				script,
 				`const fs=require("node:fs");process.stdin.once("data",()=>{console.log(JSON.stringify({type:"agent_start"}));fs.writeFileSync("tracked.txt","after\\n");console.log(JSON.stringify({type:"message_update",assistantMessageEvent:{type:"text_delta",delta:"Done"}}));console.log(JSON.stringify({type:"agent_settled"}));process.stdin.end();});\n`,
@@ -279,7 +279,7 @@ describe("Pi process controller", () => {
 	it("terminates a process that rejects the prompt", async () => {
 		const cwd = await mkdtemp(join(tmpdir(), "agentme-pi-reject-"));
 		try {
-			const script = join(cwd, "pi-stub.js");
+			const script = join(cwd, "pi-stub.cjs");
 			await writeFile(
 				script,
 				`process.stdin.once("data",()=>{console.log(JSON.stringify({type:"response",command:"prompt",success:false}));setInterval(()=>{},1000);});\n`,
@@ -297,7 +297,7 @@ describe("Pi process controller", () => {
 	it("sends abort and emits cancellation", async () => {
 		const cwd = await mkdtemp(join(tmpdir(), "agentme-pi-cancel-"));
 		try {
-			const script = join(cwd, "pi-stub.js");
+			const script = join(cwd, "pi-stub.cjs");
 			await writeFile(
 				script,
 				`let b="";process.stdin.on("data",c=>{b+=c;for(const l of b.split("\\n").filter(Boolean)){const m=JSON.parse(l);if(m.type==="prompt")console.log(JSON.stringify({type:"agent_start"}));if(m.type==="abort")console.log(JSON.stringify({type:"agent_settled"}));}});\n`,
@@ -348,7 +348,7 @@ describe("Pi runtime and health", () => {
 	it("retains the worktree and session for resume", async () => {
 		const cwd = await mkdtemp(join(tmpdir(), "agentme-pi-runtime-"));
 		try {
-			const script = join(cwd, "pi-stub.js");
+			const script = join(cwd, "pi-stub.cjs");
 			await writeFile(
 				script,
 				`process.stdin.once("data",()=>{console.log(JSON.stringify({type:"agent_start"}));console.log(JSON.stringify({type:"agent_settled"}));process.stdin.end();});\n`,

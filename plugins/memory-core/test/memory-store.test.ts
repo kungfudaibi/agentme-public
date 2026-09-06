@@ -167,6 +167,27 @@ describe("inspectable memory", () => {
 		expect(store.search("最后一条完整导出证据")).toHaveLength(1);
 		store.close();
 	});
+	it("preserves the search index when a document prevents reindexing", () => {
+		const root = mkdtempSync(
+			join(tmpdir(), "agentme-memory-reindex-rollback-"),
+		);
+		const store = new MemoryStore(root, join(root, "db.sqlite"));
+		try {
+			store.put({
+				id: "saved",
+				kind: "daily",
+				content: "searchable evidence",
+				source: "user",
+			});
+			writeFileSync(join(root, "broken.md"), "invalid document");
+			expect(() => store.reindex()).toThrow();
+			expect(store.search("searchable").map((record) => record.id)).toEqual([
+				"saved",
+			]);
+		} finally {
+			store.close();
+		}
+	});
 	it("rejects path traversal ids", () => {
 		const root = mkdtempSync(join(tmpdir(), "agentme-memory-safe-"));
 		const store = new MemoryStore(root, join(root, "db.sqlite"));
