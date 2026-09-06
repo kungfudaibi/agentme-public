@@ -169,6 +169,15 @@ regression checks this separation. Unit suites run with one worker to avoid
 concurrent SQLite/file fixtures contending for the runner's disk; their test
 counts, assertions and timeout limits remain unchanged.
 
+Serial execution exposed that Windows still spent most of the two tests' budgets
+preparing data. The export/reindex test now seeds its 101 real Markdown files
+with a temporary in-memory search index, then builds and reopens the actual
+disk index under test. The continuation test seeds all 1,005 historical events
+in one durable transaction and reopens TaskStore before exercising continuation.
+The original assertions remain, with additional reopened-index checks. Both
+files passed all 11 tests locally in 1.54 seconds. No production durability or
+test timeout setting was weakened.
+
 ## Operating limits
 
 The sidecar bounds storage at 24 MiB, 100 conversations, 500 tasks and 5,000

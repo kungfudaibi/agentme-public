@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, realpath } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import { describe, expect, it } from "vitest";
 
@@ -72,19 +73,21 @@ describe("task worker session service", () => {
 		const worktreePath = join(root, taskId);
 		await mkdir(worktreePath);
 		const canonicalWorktreePath = await realpath(worktreePath);
-		const store = new TaskStore(join(root, "agentme.sqlite"));
+		const databasePath = join(root, "agentme.sqlite");
+		let store = new TaskStore(databasePath);
 		completeTaskWithThread(store, taskId);
-		const historyLease = store.acquireLease(
-			taskId,
-			"history-writer",
-			"2026-08-24T01:00:09.000Z",
-			60_000,
+		store.close();
+		// This test exercises history retrieval and continuation, not 1,005
+		// individual fsyncs. Seed the same durable history in one transaction.
+		const history = new DatabaseSync(databasePath);
+		history.exec("BEGIN IMMEDIATE");
+		const insert = history.prepare(
+			"INSERT INTO task_outbox(task_id, event_type, payload_json, created_at) VALUES (?, 'task.worker.event', ?, ?)",
 		);
 		for (let index = 0; index < 1_005; index += 1)
-			store.appendEvent(
+			insert.run(
 				taskId,
-				historyLease,
-				{
+				JSON.stringify({
 					type: "task.worker.event",
 					taskId,
 					runtimeId: "runtime-codex",
@@ -94,10 +97,12 @@ describe("task worker session service", () => {
 						message: `step ${index}`,
 					},
 					at: "2026-08-24T01:00:10.000Z",
-				},
+				}),
 				"2026-08-24T01:00:10.000Z",
 			);
-		store.releaseLease(taskId, historyLease, "2026-08-24T01:00:11.000Z");
+		history.exec("COMMIT");
+		history.close();
+		store = new TaskStore(databasePath);
 		const resumed: Array<{
 			threadId: string;
 			worktreePath: string;
