@@ -43,3 +43,14 @@ Dependency rules:
 
 agent-office owns ordinary tasks and assistant-scoped context through injected model/persistence interfaces. Host assembles it; desktop consumes its authenticated API. Coding work remains in task-orchestrator/workspace-manager. See SPEC-agent-office.md.
 
+## Unified conversation extension (2026-09-06)
+
+`conversation-hub` owns the main conversation and durable task facts through a
+bounded JSON store and injected model/execution interfaces. The host bridges office
+roles and the existing supervisor/worker-session service; it never substitutes a
+different backend for a referenced task. The desktop renders task detail inline.
+Official model discovery is assembled by the host through injected HTTP and
+protected credentials; text and voice offers are distinct, and discovery does not
+automatically replace providers. See `SPEC-unified-conversation.md` and
+`docs/unified-conversation-acceptance.md`.
+

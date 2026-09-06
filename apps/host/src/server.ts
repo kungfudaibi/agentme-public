@@ -6,6 +6,7 @@ import {
 	type Server,
 	type ServerResponse,
 } from "node:http";
+import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { AgentOffice } from "../../../packages/agent-office/src/office.js";
 import {
@@ -28,6 +29,15 @@ import {
 	parsePersonalDashboardEntryInput,
 	type TaskEvent,
 } from "../../../packages/contracts/src/index.js";
+import { ConversationHub } from "../../../packages/conversation-hub/src/hub.js";
+import {
+	object as conversationObject,
+	invalid as invalidConversation,
+} from "../../../packages/conversation-hub/src/storage.js";
+import type {
+	ExecutionResult,
+	HubTask,
+} from "../../../packages/conversation-hub/src/types.js";
 import type {
 	DesktopActionCompleted,
 	DesktopActionRuntime,
@@ -88,6 +98,12 @@ import {
 	matchCodingPermissionRoute,
 } from "./coding-permission-api.js";
 import type { CodingPermissionService } from "./coding-permission-manager.js";
+import {
+	executeConversationOffice,
+	taskInstructions,
+} from "./conversation-office.js";
+import { executeConversationVoice } from "./conversation-voice.js";
+import type { FreeModelService } from "./free-models.js";
 import { executeMemoryRoute, matchMemoryRoute } from "./memory-api.js";
 import { executeOfficeRoute } from "./office-api.js";
 import {
@@ -129,6 +145,7 @@ const desktopOrigins = new Set([
 ]);
 
 export interface AgentMeHostOptions {
+	readonly freeModels?: FreeModelService;
 	readonly databasePath: string;
 	readonly authToken: string;
 	readonly fakeRuntimeDelayMs?: number;
@@ -203,6 +220,7 @@ function isTaskRunner(value: unknown): value is TaskRunner {
 
 export class AgentMeHost {
 	readonly #office: AgentOffice;
+	readonly #conversations: ConversationHub;
 	#officeTimer: ReturnType<typeof setInterval> | undefined;
 	readonly #options: AgentMeHostOptions;
 	readonly #store: TaskStore;
@@ -241,6 +259,25 @@ export class AgentMeHost {
 						);
 						return result?.message ?? "";
 					},
+		);
+		this.#conversations = new ConversationHub(
+			`${options.databasePath}.conversations.json`,
+			{
+				model: (messages, signal) => this.#conversationModel(messages, signal),
+				getModelPolicy: () =>
+					options.freeModels?.enabled
+						? options.freeModels.policy()
+						: { actions: "structured", contextCharacters: 10000 },
+				execute: (task, signal, link) =>
+					this.#executeConversationTask(task, signal, link),
+				continue: (task, input, signal) =>
+					this.#continueConversationTask(task, input, signal),
+				validateTarget: (repositoryId, runtimeId) =>
+					this.#runtimeIds.includes(runtimeId) &&
+					!this.#usingFakeRuntime &&
+					(this.#repositories?.list().some((r) => r.id === repositoryId) ??
+						false),
+			},
 		);
 		this.#store = new TaskStore(options.databasePath);
 		this.#graphStore = new SupervisorGraphStore(options.databasePath);
@@ -419,6 +456,7 @@ export class AgentMeHost {
 	async stop(): Promise<void> {
 		if (this.#server === undefined) return;
 		if (this.#officeTimer !== undefined) clearInterval(this.#officeTimer);
+		this.#conversations.shutdown();
 		this.#office.shutdown();
 		const server = this.#server;
 		this.#server = undefined;
@@ -447,6 +485,7 @@ export class AgentMeHost {
 		this.#sessionStore.close();
 		this.#scheduler.close();
 		this.#options.standingIntents?.close();
+		await this.#conversations.stopped();
 		this.#graphStore.close();
 		this.#store.close();
 		this.#url = undefined;
@@ -504,6 +543,132 @@ export class AgentMeHost {
 			if (request.method === "POST" && url.pathname === "/shutdown") {
 				this.#json(response, 202, { status: "stopping" });
 				setImmediate(() => void this.stop());
+				return;
+			}
+			if (url.pathname.startsWith("/conversation-voice/")) {
+				if (
+					request.method !== "POST" ||
+					!(request.headers["content-type"] ?? "")
+						.toLowerCase()
+						.startsWith("application/json")
+				) {
+					this.#json(response, 415, {
+						error: { message: "JSON POST required" },
+					});
+					return;
+				}
+				const body = await this.#readJson(request, 6 * 1024 * 1024);
+				const result = await this.#runAssistantOperation(request, (signal) =>
+					executeConversationVoice(
+						this.#options.voice,
+						url.pathname.slice("/conversation-voice/".length),
+						body,
+						AbortSignal.any([signal, AbortSignal.timeout(60000)]),
+					),
+				);
+				this.#json(response, 200, result);
+				return;
+			}
+			if (
+				url.pathname === "/model-offers" ||
+				url.pathname === "/model-offers/refresh" ||
+				url.pathname === "/model-offers/settings"
+			) {
+				response.setHeader("cache-control", "no-store");
+				const service = this.#options.freeModels;
+				if (!service) {
+					this.#json(response, 503, {
+						error: { message: "官方模型目录未配置" },
+					});
+					return;
+				}
+				if (request.method === "GET" && url.pathname === "/model-offers") {
+					await this.#runAssistantOperation(request, (signal) =>
+						service.refreshIfEnabled(signal),
+					);
+					this.#json(response, 200, service.view());
+					return;
+				}
+				if (
+					request.method === "POST" &&
+					(request.headers["content-type"] ?? "")
+						.toLowerCase()
+						.startsWith("application/json")
+				) {
+					const body = conversationObject(await this.#readJson(request));
+					if (url.pathname === "/model-offers/refresh") {
+						if (Object.keys(body).length) invalidConversation();
+						await this.#runAssistantOperation(request, (signal) =>
+							service.refresh(signal),
+						);
+					} else if (url.pathname === "/model-offers/settings")
+						await this.#runAssistantOperation(request, (signal) =>
+							service.configure(body, signal),
+						);
+					else invalidConversation();
+					this.#json(response, 200, service.view());
+					return;
+				}
+				this.#json(response, 415, {
+					error: { message: "JSON POST or GET required" },
+				});
+				return;
+			}
+			if (
+				url.pathname === "/conversations" ||
+				url.pathname.startsWith("/conversations/")
+			) {
+				response.setHeader("cache-control", "no-store");
+				const mutation = request.method === "POST";
+				if (
+					mutation &&
+					!(request.headers["content-type"] ?? "")
+						.toLowerCase()
+						.startsWith("application/json")
+				) {
+					this.#json(response, 415, {
+						error: { message: "JSON content required" },
+					});
+					return;
+				}
+				if (url.pathname === "/conversations" && request.method === "GET") {
+					this.#json(response, 200, {
+						conversations: this.#conversations.list(),
+					});
+					return;
+				}
+				if (url.pathname === "/conversations" && mutation) {
+					const body = conversationObject(await this.#readJson(request));
+					if (Object.keys(body).length) invalidConversation();
+					this.#json(response, 201, this.#conversations.createConversation());
+					return;
+				}
+				const match = /^\/conversations\/([a-f0-9-]{36})(\/messages)?$/u.exec(
+					url.pathname,
+				);
+				if (match && request.method === "GET" && !match[2]) {
+					this.#json(
+						response,
+						200,
+						this.#conversations.snapshot(match[1] ?? ""),
+					);
+					return;
+				}
+				if (match && mutation && match[2]) {
+					const body = conversationObject(await this.#readJson(request));
+					if ("conversationId" in body) invalidConversation();
+					const result = await this.#runAssistantOperation(request, (signal) =>
+						this.#conversations.send(
+							{ ...body, conversationId: match[1] },
+							signal,
+						),
+					);
+					this.#json(response, 200, result);
+					return;
+				}
+				this.#json(response, 404, {
+					error: { message: "Conversation route not found" },
+				});
 				return;
 			}
 			if (url.pathname === "/office" || url.pathname.startsWith("/office/")) {
@@ -1963,6 +2128,127 @@ export class AgentMeHost {
 		}
 	}
 
+	async #conversationModel(
+		messages: readonly {
+			role: "system" | "user" | "assistant";
+			content: string;
+		}[],
+		signal: AbortSignal,
+	): Promise<string> {
+		if (this.#options.freeModels?.enabled)
+			return this.#options.freeModels.respond(messages, signal);
+		const result = await this.#requireAssistantProviders().respond(
+			{
+				sessionId: "conversation-hub",
+				messages,
+				allowedRepositoryIds: [],
+				allowedRuntimeIds: [],
+			},
+			signal,
+		);
+		return result.message;
+	}
+	async #executeConversationTask(
+		task: HubTask,
+		signal: AbortSignal,
+		link: (id: string) => void,
+	): Promise<ExecutionResult> {
+		if (task.kind === "office")
+			return executeConversationOffice(
+				task,
+				(messages, s) => this.#conversationModel(messages, s),
+				signal,
+			);
+		if (!task.repositoryId || !task.runtimeId) invalidConversation();
+		const parentId = randomUUID();
+		await this.#requireSupervisor().createPlan({
+			parentId,
+			actorId: "local-owner",
+			tasks: [
+				{
+					repositoryId: task.repositoryId,
+					runtimeId: task.runtimeId,
+					instruction: taskInstructions(task),
+					acceptanceCriteria: ["满足用户目标和约束，提供改动及验证证据"],
+				},
+			],
+		});
+		link(parentId);
+		try {
+			while (true) {
+				signal.throwIfAborted();
+				const { children } = await this.#refreshSupervisorParent(parentId);
+				if (
+					children.length &&
+					children.every((c) =>
+						["completed", "failed", "cancelled"].includes(c.state),
+					)
+				) {
+					const success = children.every((c) => c.state === "completed");
+					return {
+						state: success ? "completed" : "failed",
+						result: children
+							.map((c) => c.report?.summary ?? `任务${c.childId}：${c.state}`)
+							.join("\n"),
+						evidence: children.flatMap((c) => [
+							`task:${c.workerTaskId ?? c.childId}`,
+							`worktree:${c.worktreeId ?? "未创建"}`,
+							JSON.stringify(c.report ?? { state: c.state }),
+						]),
+					};
+				}
+				await delay(300, undefined, { signal });
+			}
+		} finally {
+			if (signal.aborted)
+				for (const child of this.#graphStore.listChildren(parentId)) {
+					if (child.state === "dispatched")
+						await this.#requireSupervisor()
+							.cancelChild(parentId, child.childId)
+							.catch(() => undefined);
+				}
+		}
+	}
+	async #continueConversationTask(
+		task: HubTask,
+		_input: string,
+		signal: AbortSignal,
+	): Promise<ExecutionResult> {
+		if (task.kind === "office")
+			return executeConversationOffice(
+				task,
+				(messages, s) => this.#conversationModel(messages, s),
+				signal,
+			);
+		if (!task.executionId) invalidConversation();
+		const children = this.#graphStore.listChildren(task.executionId);
+		const child = children[0];
+		if (children.length !== 1 || !child)
+			invalidConversation("原编码任务不可恢复");
+		const message = `继续原工作区中的任务。以下为完整目标、约束和用户决定（后者按时间追加，较新的决定优先）：${taskInstructions(task)}`;
+		if (message.length > 4000)
+			invalidConversation("补充超过编码后端单次上限，请缩短后重试");
+		const turn = await this.#requireWorkerSessions().continue(
+			task.executionId,
+			child.childId,
+			message,
+			signal,
+		);
+		return {
+			state:
+				turn.verification === "passed"
+					? "completed"
+					: turn.verification === "cancelled"
+						? "cancelled"
+						: "failed",
+			result: turn.message,
+			evidence: [
+				`turn:${turn.turnId}`,
+				`verification:${turn.verification}`,
+				`worktree:${child.worktreeId}`,
+			],
+		};
+	}
 	async #refreshSupervisorParent(parentId: string): Promise<{
 		readonly parent: ReturnType<SupervisorGraphStore["getParent"]>;
 		readonly children: ReturnType<SupervisorGraphStore["listChildren"]>;

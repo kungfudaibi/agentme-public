@@ -39,6 +39,7 @@ import {
 	JsonCodingPermissionSettingsStore,
 	parseCodingPermissionSettings,
 } from "./coding-permission-manager.js";
+import { FreeModelService } from "./free-models.js";
 import { AgentMeHost } from "./server.js";
 import {
 	JsonTencentChannelSettingsStore,
@@ -334,7 +335,11 @@ const tencentChannel = new TencentChannelManager({
 	databasePath: tencentDatabasePath,
 	createChannel: createOfficialTencentChannel,
 });
+const freeModels = new FreeModelService(`${databasePath}.model-offers.json`, {
+	secrets: secretStore,
+});
 const host = new AgentMeHost({
+	freeModels,
 	databasePath,
 	authToken,
 	fakeRuntimeDelayMs,

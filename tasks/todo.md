@@ -2,6 +2,16 @@
 
 ## Active track
 
+Owner-approved unified conversation work (2026-09-06), sequentially:
+- [x] Task 49: Durable conversation/task facts and bounded action routing.
+- [x] Task 50: Bridge office/coding execution and return evidence to conversation.
+- [x] Task 51: Unified desktop conversation and inline task details.
+- [x] Task 52: Official free-model discovery, capability downgrade and acceptance.
+Contract: `SPEC-unified-conversation.md`. Do not push or deploy automatically.
+Task 52 implementation and verification are complete. After the targeted fixes,
+the aggregate suite passed: 361 tests, with five existing opt-in skips.
+Evidence and operating limits are in `docs/unified-conversation-acceptance.md`.
+
 Task 48 is approved: select Codex, Claude Code or Pi per coding task; route
 execution and persisted-session continuation to that backend. No new plugin ABI
 or database schema. Preserve isolation, cancellation and verification.

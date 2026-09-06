@@ -150,7 +150,9 @@ describe("inspectable memory", () => {
 		const root = mkdtempSync(join(tmpdir(), "agentme-memory-complete-export-"));
 		const notes = join(root, "notes");
 		const database = join(root, "db.sqlite");
-		let store = new MemoryStore(notes, database);
+		// Seed the real Markdown files without 202 unrelated index disk commits.
+		// The behavior under test rebuilds a persistent index from those files.
+		let store = new MemoryStore(notes, ":memory:");
 		for (let index = 0; index < 101; index += 1) {
 			store.put({
 				id: `daily-${index.toString().padStart(3, "0")}`,
@@ -166,6 +168,31 @@ describe("inspectable memory", () => {
 		store.reindex();
 		expect(store.search("最后一条完整导出证据")).toHaveLength(1);
 		store.close();
+		store = new MemoryStore(notes, database);
+		expect(store.search("最后一条完整导出证据")).toHaveLength(1);
+		expect(JSON.parse(store.export()).entries).toHaveLength(101);
+		store.close();
+	});
+	it("preserves the search index when a document prevents reindexing", () => {
+		const root = mkdtempSync(
+			join(tmpdir(), "agentme-memory-reindex-rollback-"),
+		);
+		const store = new MemoryStore(root, join(root, "db.sqlite"));
+		try {
+			store.put({
+				id: "saved",
+				kind: "daily",
+				content: "searchable evidence",
+				source: "user",
+			});
+			writeFileSync(join(root, "broken.md"), "invalid document");
+			expect(() => store.reindex()).toThrow();
+			expect(store.search("searchable").map((record) => record.id)).toEqual([
+				"saved",
+			]);
+		} finally {
+			store.close();
+		}
 	});
 	it("rejects path traversal ids", () => {
 		const root = mkdtempSync(join(tmpdir(), "agentme-memory-safe-"));

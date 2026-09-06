@@ -70,23 +70,38 @@ jobs:
         run: corepack pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Verify dependency supply chain
-        run: |
-          corepack pnpm audit --audit-level high --registry=https://registry.npmjs.org
-          corepack pnpm audit signatures --registry=https://registry.npmjs.org
+        run: corepack pnpm audit --audit-level high --registry=https://registry.npmjs.org
 
-      - name: Verify workspace
-        run: |
-          corepack pnpm lint
-          corepack pnpm typecheck
-          corepack pnpm test:unit
-          corepack pnpm test:integration
-          corepack pnpm test:e2e
-          corepack pnpm desktop:check
+      - name: Verify dependency signatures
+        run: corepack pnpm audit signatures --registry=https://registry.npmjs.org
+
+      # Each command has its own exit status on PowerShell as well as bash.
+      - name: Test packaging retry policy
+        run: node --test scripts/desktop/retry-package.node.mjs
+
+      - name: Lint workspace
+        run: corepack pnpm lint
+
+      - name: Typecheck workspace
+        run: corepack pnpm typecheck
+
+      - name: Unit tests
+        # SQLite/file fixtures contend for disk when every suite runs at once.
+        run: corepack pnpm test:unit --maxWorkers=1
+
+      - name: Integration tests
+        run: corepack pnpm test:integration
+
+      - name: End-to-end tests
+        run: corepack pnpm test:e2e
+
+      - name: Verify native desktop
+        run: corepack pnpm desktop:check
 
       - name: Build native package
         env:
           APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && '-' || '' }}
-        run: corepack pnpm desktop:build -- --bundles ${{ matrix.bundles }}
+        run: node scripts/desktop/retry-package.mjs --bundles ${{ matrix.bundles }}
 
       - name: Hash native installers
         run: node scripts/release/hash-artifacts.mjs apps/desktop/src-tauri/target/release/bundle
