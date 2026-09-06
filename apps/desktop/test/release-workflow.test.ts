@@ -3,6 +3,29 @@ import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
 describe("native desktop release workflow", () => {
+	it("keeps quality commands in separate steps so a later success cannot mask failure", async () => {
+		const workflow = await readFile(
+			new URL("../../../.github/workflows/desktop.yml", import.meta.url),
+			"utf8",
+		);
+		for (const command of [
+			"audit --audit-level high",
+			"audit signatures",
+			"lint",
+			"typecheck",
+			"test:unit --maxWorkers=1",
+			"test:integration",
+			"test:e2e",
+			"desktop:check",
+		])
+			expect(workflow).toMatch(
+				new RegExp(
+					`run: corepack pnpm ${command.replaceAll("-", "\\-")}(?:[^\\n]*)\\n`,
+				),
+			);
+		for (const step of workflow.split(/\r?\n {6}- /u))
+			expect(step).not.toMatch(/run: \|[\s\S]*?corepack pnpm/u);
+	});
 	it("passes Vitest exclusion globs without POSIX shell expansion", async () => {
 		const packageJson = JSON.parse(
 			await readFile(new URL("../../../package.json", import.meta.url), "utf8"),

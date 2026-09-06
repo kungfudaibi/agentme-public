@@ -161,6 +161,14 @@ passed and five existing opt-in tests were skipped across 96 files, in 108.34
 seconds. The three standalone packaging-retry tests, lint, typecheck and host/web
 build also passed. The earlier failed runs remain above as diagnostic history.
 
+The first PR run exposed a second CI defect: Windows reported a successful
+combined verification step despite two unit-test timeouts, because PowerShell
+returned the final successful command's exit status. Quality and audit commands
+now have separate steps, so any failing command prevents packaging. A workflow
+regression checks this separation. Unit suites run with one worker to avoid
+concurrent SQLite/file fixtures contending for the runner's disk; their test
+counts, assertions and timeout limits remain unchanged.
+
 ## Operating limits
 
 The sidecar bounds storage at 24 MiB, 100 conversations, 500 tasks and 5,000
