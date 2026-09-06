@@ -76,6 +76,7 @@ jobs:
 
       - name: Verify workspace
         run: |
+          node --test scripts/desktop/retry-package.node.mjs
           corepack pnpm lint
           corepack pnpm typecheck
           corepack pnpm test:unit
@@ -86,7 +87,7 @@ jobs:
       - name: Build native package
         env:
           APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && '-' || '' }}
-        run: corepack pnpm desktop:build -- --bundles ${{ matrix.bundles }}
+        run: node scripts/desktop/retry-package.mjs --bundles ${{ matrix.bundles }}
 
       - name: Hash native installers
         run: node scripts/release/hash-artifacts.mjs apps/desktop/src-tauri/target/release/bundle

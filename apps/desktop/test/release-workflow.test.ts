@@ -31,7 +31,18 @@ describe("native desktop release workflow", () => {
 		expect(workflow).toContain("corepack pnpm audit signatures");
 		expect(workflow).toContain("corepack pnpm desktop:check");
 		expect(workflow).toContain("hash-artifacts.mjs");
-		expect(workflow).toContain("corepack pnpm desktop:build");
+		expect(workflow).toContain(
+			"node scripts/desktop/retry-package.mjs --bundles",
+		);
+		expect(workflow).toContain(
+			"node --test scripts/desktop/retry-package.node.mjs",
+		);
+		const retry = await readFile(
+			new URL("../../../scripts/desktop/retry-package.mjs", import.meta.url),
+			"utf8",
+		);
+		expect(retry).toContain("./run-native.mjs");
+		expect(retry).toContain('"build"');
 		expect(workflow).toContain("actions/upload-artifact");
 		expect(workflow).not.toContain("cross");
 	});
