@@ -1,0 +1,433 @@
+#agent-office.c-hub .o-sidebar {
+	padding-top: 24px;
+	overflow: auto;
+}
+#agent-office.c-hub .o-workspace {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	height: 100dvh;
+}
+#agent-office.c-hub .o-topbar {
+	flex: none;
+}
+#agent-office .c-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 260px;
+	min-height: 0;
+	flex: 1;
+}
+#agent-office .c-main {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+	padding: 0 36px;
+}
+#agent-office #c-messages {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 28px 0 18px;
+	scrollbar-width: thin;
+}
+#agent-office .c-welcome {
+	max-width: 700px;
+	margin: 6vh auto 36px;
+	padding: 10px 0;
+}
+#agent-office .c-spark {
+	font-size: 48px;
+	color: #536a40;
+	margin-bottom: 20px;
+}
+#agent-office .c-welcome h1 {
+	font-size: clamp(30px, 3.6vw, 48px);
+	font-weight: 550;
+	letter-spacing: -1.6px;
+	line-height: 1.35;
+	margin: 14px 0 22px;
+}
+#agent-office .c-welcome > p:last-of-type {
+	color: var(--o-muted);
+	line-height: 1.9;
+}
+#agent-office .c-suggestions {
+	display: flex;
+	gap: 10px;
+	margin-top: 28px;
+	flex-wrap: wrap;
+}
+#agent-office .c-suggestions button {
+	border: 1px solid var(--o-line);
+	border-radius: 12px;
+	padding: 12px;
+	background: #fff;
+}
+#agent-office .c-message {
+	max-width: 860px;
+	margin: 0 auto 22px;
+	overflow-wrap: anywhere;
+}
+#agent-office .c-message.user {
+	background: #edf1e8;
+	border-radius: 16px;
+	padding: 16px 20px;
+	margin-left: 12%;
+}
+#agent-office .c-message.assistant {
+	padding: 10px 4px;
+}
+#agent-office .c-message-label {
+	font-size: 11px;
+	color: var(--o-muted);
+	margin-bottom: 8px;
+	letter-spacing: 0.05em;
+}
+#agent-office .c-message.result {
+	border-left: 3px solid #789360;
+	padding-left: 18px;
+}
+#agent-office .c-message.notice {
+	color: #735a38;
+	font-size: 13px;
+}
+#agent-office .c-task {
+	border: 1px solid var(--o-line);
+	border-radius: 13px;
+	background: white;
+	margin-top: 14px;
+}
+#agent-office .c-task summary {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	padding: 15px;
+	cursor: pointer;
+	list-style: none;
+}
+#agent-office .c-task summary > span:nth-child(2) {
+	flex: 1;
+	min-width: 0;
+}
+#agent-office .c-task :where(summary) strong {
+	font-size: 13px;
+	display: block;
+	font-weight: 600;
+}
+#agent-office .c-task small {
+	display: block;
+	color: var(--o-muted);
+	font-size: 11px;
+}
+#agent-office .c-task-icon {
+	font-size: 23px;
+	color: #68805b;
+}
+#agent-office .c-status {
+	font-size: 11px;
+	white-space: nowrap;
+	color: #5d6d59;
+	background: #edf3e8;
+	padding: 3px 8px;
+	border-radius: 20px;
+}
+#agent-office .c-status.running {
+	background: #fff2d6;
+	color: #85590b;
+}
+#agent-office .c-status.failed,
+#agent-office .c-status.interrupted {
+	background: #f7e6de;
+	color: #905037;
+}
+#agent-office .c-task-body {
+	border-top: 1px solid var(--o-line);
+	padding: 18px;
+	font-size: 13px;
+	white-space: pre-wrap;
+}
+#agent-office .c-task-body h4 {
+	margin: 14px 0 5px;
+}
+#agent-office .c-task-body ul {
+	padding-left: 20px;
+	margin: 0;
+}
+#agent-office .c-task-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 18px;
+}
+#agent-office .c-task-actions button,
+#agent-office .c-inline-ref {
+	border: 1px solid var(--o-line);
+	padding: 5px 10px;
+	border-radius: 8px;
+	font-size: 12px;
+}
+#agent-office .c-inline-ref {
+	margin-top: 12px;
+}
+#agent-office.c-hub .o-composer {
+	position: static;
+	flex: none;
+	margin: 0 auto;
+	width: 100%;
+	max-width: 860px;
+	padding: 18px 20px 12px;
+}
+#agent-office .c-options {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	border-top: 1px solid #edf0e8;
+	padding-top: 10px;
+}
+#agent-office .c-options label {
+	font-size: 10px;
+	color: var(--o-muted);
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	flex: 1;
+	min-width: 105px;
+}
+#agent-office .c-options select {
+	color: var(--o-ink);
+	font-size: 12px;
+	border: 1px solid var(--o-line);
+	background: #fafbf8;
+	padding: 5px;
+	border-radius: 6px;
+	max-width: 100%;
+}
+#agent-office .c-constraints {
+	font-size: 11px;
+	margin-top: 10px;
+	color: var(--o-muted);
+}
+#agent-office .c-constraints summary {
+	cursor: pointer;
+}
+#agent-office #c-reference {
+	background: #eef3e7;
+	color: #3c5745;
+	padding: 6px 10px;
+	border-radius: 8px;
+	font-size: 12px;
+	margin-bottom: 10px;
+}
+#agent-office #c-reference button {
+	text-decoration: underline;
+	margin-left: 10px;
+}
+#agent-office #c-hint {
+	font-size: 11px;
+	color: var(--o-muted);
+}
+#agent-office #c-notice {
+	flex: none;
+	min-height: 24px;
+	padding: 5px 0 10px;
+	text-align: center;
+}
+#agent-office .c-context {
+	border-left: 1px solid var(--o-line);
+	padding: 28px 22px;
+	background: #f6f7f2;
+	overflow: auto;
+}
+#agent-office .c-context h2 {
+	font-size: 17px;
+	margin: 10px 0 24px;
+}
+#agent-office .c-context-note {
+	border-top: 1px solid var(--o-line);
+	margin-top: 30px;
+	padding-top: 24px;
+	font-size: 12px;
+	color: var(--o-muted);
+}
+#agent-office .c-context-note strong {
+	color: var(--o-ink);
+}
+#agent-office .c-context-note p {
+	margin-top: 8px;
+}
+#agent-office .c-empty-small {
+	font-size: 12px;
+	color: var(--o-muted);
+	line-height: 1.9;
+}
+#agent-office .c-task-short {
+	display: block;
+	text-align: left;
+	padding: 12px 0;
+	width: 100%;
+	border-bottom: 1px solid var(--o-line);
+}
+#agent-office .c-task-short strong {
+	display: block;
+	font-size: 13px;
+	font-weight: 500;
+}
+#agent-office .c-task-short small {
+	font-size: 11px;
+	color: var(--o-muted);
+}
+#agent-office .c-conversation {
+	display: block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: 100%;
+	text-align: left;
+	padding: 10px 12px;
+	border-radius: 8px;
+	margin-bottom: 4px;
+	font-size: 13px;
+}
+#agent-office .c-conversation.selected {
+	background: #e2e9d9;
+	color: #354e37;
+}
+#agent-office #c-conversations {
+	flex: 1;
+	overflow: auto;
+	min-height: 80px;
+}
+#agent-office #c-mobile-settings {
+	font-size: 12px;
+	border: 1px solid var(--o-line);
+	border-radius: 7px;
+	padding: 5px 10px;
+}
+#c-return {
+	position: fixed;
+	bottom: 15px;
+	left: 16px;
+	z-index: 50;
+	border: 0;
+	background: #405c43;
+	color: white;
+	padding: 12px 20px;
+	border-radius: 10px;
+	cursor: pointer;
+}
+@media (max-width: 1200px) {
+	#agent-office .c-layout {
+		grid-template-columns: 1fr;
+	}
+	#agent-office .c-context {
+		display: none;
+	}
+	#agent-office .c-main {
+		padding: 0 26px;
+	}
+}
+@media (max-width: 760px) {
+	#agent-office.c-hub {
+		grid-template-columns: 1fr;
+	}
+	#agent-office.c-hub .o-sidebar {
+		display: none;
+	}
+	#agent-office .c-main {
+		padding: 0 14px;
+	}
+	#agent-office .c-welcome {
+		margin-top: 20px;
+	}
+	#agent-office .c-welcome h1 {
+		font-size: 32px;
+	}
+	#agent-office .c-spark {
+		font-size: 32px;
+		margin-bottom: 10px;
+	}
+	#agent-office .c-suggestions {
+		gap: 6px;
+		margin-top: 15px;
+	}
+	#agent-office .c-suggestions button {
+		font-size: 11px;
+		padding: 8px;
+	}
+	#agent-office.c-hub .o-composer {
+		padding: 12px;
+	}
+	#agent-office #c-hint {
+		display: none;
+	}
+	#agent-office .c-message.user {
+		margin-left: 5%;
+	}
+	#agent-office #c-running {
+		font-size: 11px;
+	}
+	#agent-office .c-options {
+		gap: 6px;
+	}
+	#agent-office .c-options label {
+		min-width: 90px;
+	}
+}
+
+#agent-office .c-voice-controls {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+	font-size: 11px;
+}
+#agent-office .c-voice-controls select {
+	background: transparent;
+	border: 1px solid var(--o-line);
+	border-radius: 6px;
+	padding: 4px;
+	font: inherit;
+	color: inherit;
+}
+#agent-office.c-hub .o-composer-actions {
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+#agent-office.c-hub .o-topbar > p {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+#agent-office.c-hub .o-topbar > div {
+	flex-shrink: 0;
+}
+#agent-office.c-hub .o-topbar button {
+	white-space: nowrap;
+}
+@media (max-width: 760px) {
+	#agent-office.c-hub .o-topbar {
+		height: 64px;
+		padding: 0 14px;
+		gap: 8px;
+	}
+	#agent-office.c-hub .o-topbar > p {
+		display: block;
+		flex: 1;
+	}
+	#agent-office.c-hub .o-topbar > p > span,
+	#agent-office.c-hub #c-running {
+		display: none;
+	}
+	#agent-office.c-hub #c-title {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		display: block;
+	}
+	#agent-office.c-hub .o-topbar > div {
+		gap: 8px;
+	}
+}
